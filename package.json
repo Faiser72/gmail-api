@@ -1,0 +1,14 @@
+{
+  "name": "gmailapi",
+  "version": "1.0.0",
+  "description": "gmail api to read gmails",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "faiser",
+  "license": "ISC",
+  "dependencies": {
+    "googleapis": "^39.2.0"
+  }
+}
