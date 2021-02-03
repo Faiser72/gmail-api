@@ -3,7 +3,8 @@ const readline = require('readline');
 const { google } = require('googleapis');
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+// const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+const SCOPES = ['https://accounts.google.com/o/oauth2/v2/auth'];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
@@ -97,17 +98,37 @@ function listLabels(auth) {
             console.log('The Gmail API returned an error: ' + err);
             return;
         }
-        getUserDetails();
-        console.log("response" + res);
+        // getUserDetails();
+        console.log("response" + JSON.stringify(res));
         // console.log("response" + res.headers.authorize);
     });
 }
 
 function getUserDetails() {
-    var request = require('request');
-    request('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=youraccess_token', function(error, response, body) {
-        if (!error && response.statusCode == 200) {
-            console.log(body) // Print the google web page.
-        }
-    })
+
+    const https = require('https');
+
+    https.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=Bearer ya29.a0AfH6SMB27FPhBoUS71QP181AH6SGu_rSoeCVo7vkDu45TRYyNZtLoQJ_uJdUr8tgyyuF5B2mIu-7_NvU8gpMj5d3QFI7kqoSM82RccpiGCLJNfXgFwwelnVtttOEIQRYtDGFcYV-2FixlVN_j2FF_KwtpbfyVjstw3EuA8BZyU5N', (resp) => {
+        let data = '';
+
+        // A chunk of data has been received.
+        resp.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        // The whole response has been received. Print out the result.
+        resp.on('end', () => {
+            console.log(JSON.parse(data));
+        });
+
+    }).on("error", (err) => {
+        console.log("Error: " + err.message);
+    });
+
+    // var request = require('request');
+    // request('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=ya29.A0AfH6SMAfrrEAW9FuvhA7KWIZunv-I6gFw8jUNPXf8K4rik_GZ46m3wbEwZVabJe6GKeEgIWNwXSyDSXLYY2yIz1yGmi1ykFx9pibu3BKa8E4c3V0fgS51M7k0q9AvlnpYtEeqppEO-4-INhY5CcZIqOQ0THBTQ', function(error, response, body) {
+    //     if (!error && response.statusCode == 200) {
+    //         console.log(body) // Print the google web page.
+    //     }
+    // })
 }
