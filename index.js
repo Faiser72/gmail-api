@@ -1,6 +1,7 @@
 const fs = require('fs');
 const readline = require('readline');
 const { google } = require('googleapis');
+const OAuth2Client = google.auth.OAuth2;
 
 // If modifying these scopes, delete token.json.
 // const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -15,6 +16,7 @@ fs.readFile('credentials.json', (err, content) => {
     if (err) return console.log('Error loading client secret file:', err);
     // Authorize a client with credentials, then call the Gmail API.
     authorize(JSON.parse(content), listLabels);
+    // authorize(JSON.parse(content), listMessages)
 });
 
 /**
@@ -62,6 +64,7 @@ function getNewToken(oAuth2Client, callback) {
                 if (err) return console.error(err);
                 console.log('Token stored to', TOKEN_PATH);
             });
+
             callback(oAuth2Client);
         });
     });
@@ -74,41 +77,99 @@ function getNewToken(oAuth2Client, callback) {
  */
 function listLabels(auth) {
     const gmail = google.gmail({ version: 'v1', auth });
-    // gmail.users.labels.list({
-    //     userId: 'me',
-    // }, (err, res) => {
-    //     if (err) return console.log('The API returned an error: ' + err);
-    //     const labels = res.data.labels;
-    //     if (labels.length) {
-    //         debugger;
-    //         console.log('Labels:');
-    //         labels.forEach((label) => {
-    //             console.log(`- ${label.name}`);
-
-    //         });
-    //     } else {
-    //         console.log('No labels found.');
-    //     }
-    // });
-    gmail.users.messages.list({
+    gmail.users.labels.list({
         userId: 'me',
-        maxResults: 1,
-    }, function(err, res) {
-        if (err) {
-            console.log('The Gmail API returned an error: ' + err);
-            return;
+    }, (err, res) => {
+        if (err) return console.log('The API returned an error: ' + err);
+        const labels = res.data.labels;
+
+        if (labels.length) {
+            const messages = listMessages(auth, 'label:inbox subject:reminder');
+            console.log(messages);
+            messages.then(function(result) {
+                console.log(result) // "Some User token"
+                let x = "1776b025fda2c380";
+                getUserDetails()
+                    // var threadMessages = gmail.Users.Threads.Get("me", x).Execute();
+                    // console.log(threadMessages);
+            })
+
+            // if (messages) {
+            //     console.log('Messages');
+            //     messages.forEach((messages, i) => {
+            //         console.log(messages, i);
+            //     })
+            // } else {
+            //     console.log('No messages found.');
+            // }
+            console.log('Labels:');
+            labels.forEach((label) => {
+                console.log(`- ${label.name}`);
+
+            });
+        } else {
+            console.log('No labels found.');
         }
-        // getUserDetails();
-        console.log("response" + JSON.stringify(res));
-        // console.log("response" + res.headers.authorize);
+    });
+    // gmail.users.messages.list({
+    //     userId: 'me',
+    //     maxResults: 1,
+    // }, function(err, res) {
+    //     if (err) {
+    //         console.log('The Gmail API returned an error: ' + err);
+    //         return;
+    //     }
+    //     const messages = listMessages(oAuth2Client, 'label:inbox subject:reminder');
+    //     console.log(messages);
+    //     // getUserDetails();
+    //     console.log("response" + JSON.stringify(res));
+    //     // console.log("response" + res.headers.authorize);
+    // });
+}
+
+// function listLabels(auth) {
+//     // ...      
+//     labels.forEach((label) => {
+//         console.log(`- ${label.name} : ${label.id}`);
+//     });
+//     // ...
+// }
+
+
+
+
+function listMessages(auth, query) {
+    return new Promise((resolve, reject) => {
+        const gmail = google.gmail({ version: 'v1', auth });
+        console.log('simple', gmail.users.messages.context)
+        gmail.users.messages.list({
+            userId: 'me',
+            q: query,
+        }, (err, res) => {
+            if (err) {
+                console.log('res', res);
+                reject(err);
+                return;
+            }
+            if (!res.data.messages) {
+                console.log('res', res);
+                console.log(res.data.messages);
+                resolve([]);
+                return;
+            }
+            resolve(res.data.messages);
+        });
     });
 }
+
 
 function getUserDetails() {
 
     const https = require('https');
+    // https://www.googleapis.com/gmail/v1/users/somebody%40gmail.com/messages/147199d21bbaf5a5?key={YOUR_API_KEY}
+    // https.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=ya29.a0AfH6SMBUH7SAxgMh67iJhYoqBzbn7ukoUrA97Aeuhw0cDglcJdJUFWgmGFWRmma-lMdlYEcSmPtreD1P8PR991LW1nxK2HG7NHgWrSlju8oj7Tv3wyrIHX37UvtMW2X3m5i2YqPTuZX3gnqiSrtqOFSwEDle6U1Kqad8zm05hGih', (resp) => {
+    https.get('https://gmail.googleapis.com/gmail/v1/users/dev.faiz7295@gmail.com/threads/1765f310715aa914', (resp) => {
 
-    https.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=Bearer ya29.a0AfH6SMB27FPhBoUS71QP181AH6SGu_rSoeCVo7vkDu45TRYyNZtLoQJ_uJdUr8tgyyuF5B2mIu-7_NvU8gpMj5d3QFI7kqoSM82RccpiGCLJNfXgFwwelnVtttOEIQRYtDGFcYV-2FixlVN_j2FF_KwtpbfyVjstw3EuA8BZyU5N', (resp) => {
         let data = '';
 
         // A chunk of data has been received.
